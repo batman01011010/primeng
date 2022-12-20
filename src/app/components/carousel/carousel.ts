@@ -230,7 +230,10 @@ export class Carousel implements AfterContentInit {
 
     footerTemplate: TemplateRef<any>;
 
+    doc?: Document;
+
     constructor(public el: ElementRef, public zone: NgZone, public cd: ChangeDetectorRef, private renderer: Renderer2, @Inject(DOCUMENT) private document: Document) {
+        this.doc = document as Document;
         this.totalShiftedItems = this.page * this.numScroll * -1;
     }
 

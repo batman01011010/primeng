@@ -1,5 +1,5 @@
 import { animate, animation, AnimationEvent, style, transition, trigger, useAnimation } from '@angular/animations';
-import { CommonModule, DOCUMENT } from '@angular/common';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
     AfterContentInit,
     ChangeDetectionStrategy,
@@ -14,6 +14,7 @@ import {
     NgModule,
     OnDestroy,
     Output,
+    PLATFORM_ID,
     QueryList,
     Renderer2,
     TemplateRef,
@@ -286,7 +287,11 @@ export class Overlay implements AfterContentInit, OnDestroy {
     };
 
     get modal() {
-        return this.mode === 'modal' || (this.overlayResponsiveOptions && this.window?.matchMedia(this.overlayResponsiveOptions.media?.replace('@media', '') || `(max-width: ${this.overlayResponsiveOptions.breakpoint})`).matches);
+        if (isPlatformBrowser(this.platformId)) {
+            return this.mode === 'modal' || (this.overlayResponsiveOptions && this.window?.matchMedia(this.overlayResponsiveOptions.media?.replace('@media', '') || `(max-width: ${this.overlayResponsiveOptions.breakpoint})`).matches);
+        } else {
+            return false;
+        }
     }
 
     get overlayMode() {
@@ -317,7 +322,15 @@ export class Overlay implements AfterContentInit, OnDestroy {
         return DomHandler.getTargetElement(this.target, this.el?.nativeElement);
     }
 
-    constructor(@Inject(DOCUMENT) private document: Document, public el: ElementRef, public renderer: Renderer2, private config: PrimeNGConfig, public overlayService: OverlayService, private cd: ChangeDetectorRef) {
+    constructor(
+        @Inject(PLATFORM_ID) private platformId: Object,
+        @Inject(DOCUMENT) private document: Document,
+        public el: ElementRef,
+        public renderer: Renderer2,
+        private config: PrimeNGConfig,
+        public overlayService: OverlayService,
+        private cd: ChangeDetectorRef
+    ) {
         this.window = this.document.defaultView;
     }
 
@@ -338,17 +351,19 @@ export class Overlay implements AfterContentInit, OnDestroy {
     show(overlay?: HTMLElement, isFocus: boolean = false) {
         this.onVisibleChange(true);
         this.handleEvents('onShow', { overlay: overlay || this.overlayEl, target: this.targetEl, mode: this.overlayMode });
-
-        isFocus && DomHandler.focus(this.targetEl);
-        this.modal && DomHandler.addClass(this.document?.body, 'p-overflow-hidden');
+        if (isPlatformBrowser(this.platformId)) {
+            isFocus && DomHandler.focus(this.targetEl);
+            this.modal && DomHandler.addClass(this.document?.body, 'p-overflow-hidden');
+        }
     }
 
     hide(overlay?: HTMLElement, isFocus: boolean = false) {
         this.onVisibleChange(false);
         this.handleEvents('onHide', { overlay: overlay || this.overlayEl, target: this.targetEl, mode: this.overlayMode });
-
-        isFocus && DomHandler.focus(this.targetEl);
-        this.modal && DomHandler.removeClass(this.document?.body, 'p-overflow-hidden');
+        if (isPlatformBrowser(this.platformId)) {
+            isFocus && DomHandler.focus(this.targetEl);
+            this.modal && DomHandler.removeClass(this.document?.body, 'p-overflow-hidden');
+        }
     }
 
     alignOverlay() {

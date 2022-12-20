@@ -17,9 +17,11 @@ import {
     ChangeDetectorRef,
     IterableDiffers,
     ChangeDetectionStrategy,
-    ViewEncapsulation
+    ViewEncapsulation,
+    Inject,
+    PLATFORM_ID
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { trigger, style, transition, animate, AnimationEvent } from '@angular/animations';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
@@ -436,9 +438,21 @@ export class AutoComplete implements AfterViewChecked, AfterContentInit, OnDestr
 
     inputValue: string = null;
 
-    constructor(public el: ElementRef, public renderer: Renderer2, public cd: ChangeDetectorRef, public differs: IterableDiffers, public config: PrimeNGConfig, public overlayService: OverlayService) {
+    private doc?: Document;
+
+    constructor(
+        public el: ElementRef,
+        public renderer: Renderer2,
+        public cd: ChangeDetectorRef,
+        public differs: IterableDiffers,
+        public config: PrimeNGConfig,
+        public overlayService: OverlayService,
+        @Inject(PLATFORM_ID) private platformId: Object,
+        @Inject(DOCUMENT) document: Document
+    ) {
         this.differ = differs.find([]).create(null);
         this.listId = UniqueComponentId() + '_list';
+        this.doc = document as Document;
     }
 
     @Input() get suggestions(): any[] {
@@ -569,7 +583,7 @@ export class AutoComplete implements AfterViewChecked, AfterContentInit, OnDestr
 
     onInput(event: Event) {
         // When an input element with a placeholder is clicked, the onInput event is invoked in IE.
-        if (!this.inputKeyDown && DomHandler.isIE()) {
+        if (isPlatformBrowser(this.platformId) && !this.inputKeyDown && DomHandler.isIE()) {
             return;
         }
 

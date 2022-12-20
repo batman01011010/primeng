@@ -1,5 +1,5 @@
 import { AnimationEvent } from '@angular/animations';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
     AfterContentInit,
     AfterViewChecked,
@@ -11,11 +11,13 @@ import {
     ElementRef,
     EventEmitter,
     forwardRef,
+    Inject,
     Input,
     NgModule,
     NgZone,
     OnInit,
     Output,
+    PLATFORM_ID,
     QueryList,
     Renderer2,
     TemplateRef,
@@ -546,7 +548,20 @@ export class Dropdown implements OnInit, AfterViewInit, AfterContentInit, AfterV
 
     listId: string;
 
-    constructor(public el: ElementRef, public renderer: Renderer2, public cd: ChangeDetectorRef, public zone: NgZone, public filterService: FilterService, public config: PrimeNGConfig) {}
+    private doc?: Document;
+
+    constructor(
+        public el: ElementRef,
+        public renderer: Renderer2,
+        public cd: ChangeDetectorRef,
+        public zone: NgZone,
+        public filterService: FilterService,
+        public config: PrimeNGConfig,
+        @Inject(DOCUMENT) document: Document,
+        @Inject(PLATFORM_ID) private platformId: Object
+    ) {
+        this.doc = document as Document;
+    }
 
     ngAfterContentInit() {
         this.templates.forEach((item) => {
@@ -736,7 +751,9 @@ export class Dropdown implements OnInit, AfterViewInit, AfterContentInit, AfterV
         if (this.selectedOptionUpdated && this.itemsWrapper) {
             let selectedItem = DomHandler.findSingle(this.overlayViewChild.el.nativeElement, 'li.p-highlight');
             if (selectedItem) {
-                DomHandler.scrollInView(this.itemsWrapper, DomHandler.findSingle(this.overlayViewChild.el.nativeElement, 'li.p-highlight'));
+                if (isPlatformBrowser(this.platformId)) {
+                    DomHandler.scrollInView(this.itemsWrapper, DomHandler.findSingle(this.overlayViewChild.el.nativeElement, 'li.p-highlight'));
+                }
             }
             this.selectedOptionUpdated = false;
         }
